@@ -17,3 +17,7 @@ func (c cat) Speak() string {
 func (c cat) Purr() {
 	fmt.Println("Purr")
 }
+
+func (c cat) Run() {
+	fmt.Println("Running")
+}
