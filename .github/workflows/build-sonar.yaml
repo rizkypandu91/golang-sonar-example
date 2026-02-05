@@ -59,7 +59,7 @@ jobs:
 
       - name: Run SonarScanner CLI analysis
         env:
-          SONAR_TOKEN: ${{ secrets.sonar-token }}
+          SONAR_TOKEN: ${{ secrets.SONAR_CLOUD_TOKEN }}
           PULL_REQUEST_KEY: ""
         run: |
           sonar-scanner -Dsonar.region=US \
