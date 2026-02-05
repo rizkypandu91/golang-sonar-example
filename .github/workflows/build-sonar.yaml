@@ -39,7 +39,7 @@ jobs:
         run: go mod vendor
 
       - name: Build application
-        run: go build -o ./app ./cmd/server
+        run: go build -o ./app ./cmd/project
 
       - name: Run tests with coverage
         run: go test -coverprofile=coverage.out ./...
