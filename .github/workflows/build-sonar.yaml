@@ -1,0 +1,68 @@
+name: Build, Test, and Sonar Analysis
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    types:
+      - opened
+    branches:
+      - master
+  workflow_dispatch:
+
+
+jobs:
+  build-test:
+    name: Build and Test
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Get dependencies
+        run: go mod vendor
+
+      - name: Build application
+        run: go build -o ./app ./cmd/server
+
+      - name: Run tests with coverage
+        run: go test -coverprofile=coverage.out ./...
+        
+      - name: Setup mise
+        run: |
+          curl https://mise.run | sh
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+          echo "${HOME}/.local/share/mise/bin" >> "${GITHUB_PATH}"
+          echo "${HOME}/.local/share/mise/shims" >> "${GITHUB_PATH}"
+
+      - name: Install SonarScanner CLI
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mise use --global sonar-scanner-cli@8
+
+      - name: Run SonarScanner CLI analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.sonar-token }}
+          PULL_REQUEST_KEY: ""
+        run: |
+          sonar-scanner -Dsonar.region=US \
+            ${PULL_REQUEST_KEY:+-Dsonar.pullrequest.key=$PULL_REQUEST_KEY} \
+            -Dsonar.qualitygate.wait=${{ inputs.quality-gate && 'true' || 'false' }}
+
