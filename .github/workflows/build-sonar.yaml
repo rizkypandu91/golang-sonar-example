@@ -13,7 +13,7 @@ on:
     inputs:
       quality-gate:
         description: >
-          Determines whether the workflow should fail if SonarQube quality thresholds are not met
+          Quality Gate
         type: boolean
         default: true
 
@@ -68,7 +68,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_CLOUD_TOKEN }}
           PULL_REQUEST_KEY: ""
         run: |
-          sonar-scanner -Dsonar.region=US \
+          sonar-scanner \
             ${PULL_REQUEST_KEY:+-Dsonar.pullrequest.key=$PULL_REQUEST_KEY} \
             -Dsonar.qualitygate.wait=${{ inputs.quality-gate && 'true' || 'false' }}
 
