@@ -10,6 +10,12 @@ on:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      quality-gate:
+        description: >
+          Determines whether the workflow should fail if SonarQube quality thresholds are not met
+        type: boolean
+        default: true
 
 
 jobs:
