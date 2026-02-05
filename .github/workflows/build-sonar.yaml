@@ -61,12 +61,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          mise use --global sonar-scanner-cli@8
+          mise use --global sonar-scanner-cli@8 
+          mise use --global github-cli@2
+
+      - name: Search for issues
+        id: search-for-issues
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          query="is:pr+is:open+repo:${{ github.repository }}+head:${{ github.ref_name }}"
+          
+          result=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/search/issues?q=$query" | jq -c '.items | map(.number)'
+          )
+          echo "result=$result" >> $GITHUB_OUTPUT          
 
       - name: Run SonarScanner CLI analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_CLOUD_TOKEN }}
-          PULL_REQUEST_KEY: ""
+          PULL_REQUEST_KEY: ${{ fromJSON(steps.search-for-issues.outputs.result)[0] }}
         run: |
           sonar-scanner \
             ${PULL_REQUEST_KEY:+-Dsonar.pullrequest.key=$PULL_REQUEST_KEY} \
